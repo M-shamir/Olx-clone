@@ -1,4 +1,5 @@
 from pydantic import BaseModel,EmailStr,constr
+from typing import Optional
 
 class UserBase(BaseModel):
     username:str
@@ -20,3 +21,37 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class ProductCreate(BaseModel):
+    brand: str
+    year: int
+    fuel: str
+    transmission: str
+    kilometer_driven: int
+    no_of_owners: int
+    title: str
+    description: str
+    price: float
+    image1_url: str
+    image2_url: Optional[str]
+    image3_url: Optional[str]
+    location: str
+
+class ProductOut(BaseModel):
+    id: int
+    user_id: int
+    brand: str
+    year: int
+    fuel: str
+    transmission: str
+    kilometer_driven: int
+    no_of_owners: int
+    title: str
+    description: str
+    price: float
+    image1_url: str
+    image2_url: Optional[str]
+    image3_url: Optional[str]
+    location: str
+
+    class Config:
+        from_attributes = True
