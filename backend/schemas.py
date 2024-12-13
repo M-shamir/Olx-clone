@@ -21,7 +21,7 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
-class ProductCreate(BaseModel):
+class SellCreate(BaseModel):
     brand: str
     year: int
     fuel: str
@@ -31,12 +31,9 @@ class ProductCreate(BaseModel):
     title: str
     description: str
     price: float
-    image1_url: str
-    image2_url: Optional[str]
-    image3_url: Optional[str]
     location: str
 
-class ProductOut(BaseModel):
+class SellOut(BaseModel):
     id: int
     user_id: int
     brand: str
@@ -48,10 +45,9 @@ class ProductOut(BaseModel):
     title: str
     description: str
     price: float
-    image1_url: str
-    image2_url: Optional[str]
-    image3_url: Optional[str]
     location: str
 
     class Config:
         from_attributes = True
+
+

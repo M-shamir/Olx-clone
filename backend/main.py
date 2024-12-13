@@ -3,11 +3,9 @@ from sqlalchemy.orm import Session
 from database import engine, SessionLocal, Base
 from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
-from schemas import UserCreate,UserOut,LoginRequest,ProductCreate,ProductOut
-from models import User
+from schemas import UserCreate,UserOut,LoginRequest,SellCreate,SellOut
+from models import User,Sell
 from utils import hash_password
-from cloudinary.uploader import upload
-from cloudinary.exceptions import Error as CloudinaryError
 from typing import Optional
 from sqlalchemy.orm import Session
 from mimetypes import guess_extension
@@ -16,11 +14,22 @@ from jwt_utils import create_access_token, decode_access_token  # Import JWT fun
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from jwt import ExpiredSignatureError, PyJWTError
+import shutil
+import os
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+
+
+
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+Base.metadata.create_all(bind=engine)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 origins = [
     "http://localhost",
@@ -130,59 +139,25 @@ def login(user: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=f"Error during login: {str(e)}")
 
 
-@app.post("/products/", response_model=ProductOut)
+@app.post("/products/", response_model=SellOut)
 def create_product(
-    product: ProductCreate,
-    image1: UploadFile = File(...),
-    image2: Optional[UploadFile] = None,
-    image3: Optional[UploadFile] = None,
+    product: SellCreate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
-        # Validate file types
-        def validate_image(file: UploadFile):
-            if file.content_type not in ALLOWED_EXTENSIONS:
-                raise HTTPException(
-                    status_code=400, 
-                    detail=f"Invalid file type {file.content_type}. Only JPG and PNG are allowed."
-                )
-
-        validate_image(image1)
-        if image2:
-            validate_image(image2)
-        if image3:
-            validate_image(image3)
-
-        # Upload images to Cloudinary
-        def upload_to_cloudinary(file: UploadFile):
-            try:
-                upload_result = upload(file.file)
-                return upload_result.get("secure_url")
-            except CloudinaryError as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Image upload failed: {str(e)}"
-                )
-
-        image1_url = upload_to_cloudinary(image1)
-        image2_url = upload_to_cloudinary(image2) if image2 else None
-        image3_url = upload_to_cloudinary(image3) if image3 else None
-
-        # Create a new product
-        db_product = Product(
-            user_id=current_user.id,  # Corrected to use the current authenticated user's ID
+        # Create a new Sell entry
+        db_product = Sell(
+            user_id=current_user.id,
             brand=product.brand,
-            year=product.year,  # Use the integer directly
+            year=product.year,
             fuel=product.fuel,
             transmission=product.transmission,
-            kilometer_driven=product.kilometer_driven,  # Use the integer directly
-            no_of_owners=product.no_of_owners,  # Use the integer directly
+            kilometer_driven=product.kilometer_driven,
+            no_of_owners=product.no_of_owners,
             title=product.title,
             description=product.description,
-            price=product.price,  # Use the float directly
-            image1_url=image1_url,
-            image2_url=image2_url,
-            image3_url=image3_url,
+            price=product.price,
             location=product.location,
         )
 
@@ -192,14 +167,9 @@ def create_product(
 
         return db_product
 
-    except HTTPException as e:
-        raise e
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"An error occurred while creating the product: {str(e)}"
+            status_code=500,
+            detail=f"An error occurred while creating the product: {str(e)}",
         )
-
-
-
-
 

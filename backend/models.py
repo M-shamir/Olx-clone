@@ -11,10 +11,13 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)  # Ensure this field is included
     is_verified = Column(Boolean, default=False)  # Ensure this field is included
-    products = relationship("Product",back_populates="user")
+    sells = relationship("Sell",back_populates="user")
 
-class Product(Base):
-    __tablename__ = "products"
+
+
+
+class Sell(Base):
+    __tablename__ = "sells"
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -27,11 +30,9 @@ class Product(Base):
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)
     price = Column(Float, nullable=False)
-    image1_url = Column(String, nullable=False)
-    image2_url = Column(String, nullable=True)
-    image3_url = Column(String, nullable=True)
     location = Column(String, nullable=False)
-
-    user =  relationship("User",back_populates="products")
+    
+    
+    user = relationship("User", back_populates="sells")
 
 
