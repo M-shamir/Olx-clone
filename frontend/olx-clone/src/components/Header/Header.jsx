@@ -6,20 +6,21 @@ import SellButton from '../../assets/SellButton';
 import SellButtonPlus from '../../assets/SellButtonPlus';
 import './Header.css'
 import { useEffect, useState } from 'react';
+import {Link, useNavigate} from "react-router-dom";
 
 function Header() {
-  const [isLoggedIn,setIsLoggedIn] =useState(false)
+  const [isAuthenticated,setIsAuthenticated]= useState(false)
+  const navigate =  useNavigate()
   useEffect(()=>{
-    const token = localStorage.getItem('acessToken')
-    setIsLoggedIn(!!token)
+    const accessToken = localStorage.getItem("accessToken");
+    setIsAuthenticated(!!accessToken)
   },[])
-  const handleAuthClick = ()=>{
-    if (isLoggedIn){
-      localStorage.removeItem('acessToken')
-      setIsLoggedIn(false)
-    }else{
-      window.location.href = '/'
-    }
+  const handleLogout =()=>{
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("username");
+    setIsAuthenticated(false);
+    navigate("/");
   }
   return (
    <>
@@ -48,18 +49,23 @@ function Header() {
           <span> ENGLISH </span>
           <Arrow></Arrow>
         </div>
-        <div onClick={handleAuthClick} className="loginPage">
-        {isLoggedIn ? 'Logout' : 'Login'}
+        <div  className="loginPage">
+        {
+          !isAuthenticated?(<Link to="/login">Login</Link>):
+          (<>
+        <p onClick={handleLogout}>Logout</p>
+          </>
+       ) }
           <hr />
         </div>
 
-        <div className="sellMenu">
+        <Link to="/sell" className="sellMenu">
           <SellButton></SellButton>
           <div className="sellMenuContent">
             <SellButtonPlus></SellButtonPlus>
             <span>SELL</span>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
 

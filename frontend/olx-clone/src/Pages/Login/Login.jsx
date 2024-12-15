@@ -1,43 +1,49 @@
 import Logo from '../../assets/Images/olx-logo.png';
 import './Login.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {Link, useNavigate} from "react-router-dom";
 
 function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  
-  const handleLogin = async (e) =>{
-    e.preventDefault()
-
+  useEffect(()=>{
+    const accessToken = localStorage.getItem("accessToken")
+    if (accessToken){
+      navigate("/")
+    }
+  },[navigate])
+  const handleLogin = async (e) => {
+    e.preventDefault();
     try {
-      const response= await fetch("http://localhost:8000/login/",{
-        method: 'POST',
+      const response = await fetch("http://127.0.0.1:8000/api/users/login/", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email,
+          username: username,
           password: password,
-          
-      }),
-    })
-    if (response.ok) {
-      const data = await response.json();
-      console.log(data);
-      localStorage.setItem("acessToken", data.token);
-      
-      
-      localStorage.setItem("username",data.user)
-      navigate("/");
-    } else {
-      const data = await response.json();
-      setError(data.detail || "Login failed. Please try again.");
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Store access and refresh tokens in localStorage
+        localStorage.setItem("accessToken", data.access);
+        localStorage.setItem("refreshToken", data.refresh);
+        localStorage.setItem("username", data.user);
+
+        console.log("Login successful:", data);
+        navigate("/"); // Redirect to the homepage
+      } else {
+        const data = await response.json();
+        setError(data.detail || "Login failed. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again later.");
     }
-  } catch (err) {
-    setError("An error occurred. Please try again later.");
-  }
   };
 
 
@@ -46,15 +52,15 @@ function Login() {
       <div className="loginParentDiv">
         <img width="200px" height="200px" src={Logo}></img>
         <form onSubmit={handleLogin}> 
-          <label htmlFor="fname">Email</label>
+          <label htmlFor="fname">username</label>
           <br />
           <input
             className="input"
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={(e)=>setEmail(e.target.value)}
+            type="text"
+            id="username"
+            name="username"
+            value={username}
+            onChange={(e)=>setUsername(e.target.value)}
 
           />
           <br />

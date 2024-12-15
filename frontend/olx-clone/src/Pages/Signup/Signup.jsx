@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import Logo from '../../assets/Images/olx-logo.png';
 import './Signup.css';
 import {Link, useNavigate} from "react-router-dom";
@@ -12,11 +12,17 @@ export default function Signup() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  useEffect(()=>{
+    const accessToken = localStorage.getItem("accessToken")
+    if (accessToken){
+      navigate("/")
+    }
+  },[navigate])
   const handleSignup = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:8000/signup/", {
+      const response = await fetch("http://127.0.0.1:8000/api/users/signup/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -27,7 +33,15 @@ export default function Signup() {
       });
 
       if (response.ok) {
-        navigate("/");
+        const data = await response.json();
+      // Store tokens in localStorage
+      localStorage.setItem("accessToken", data.access);
+      localStorage.setItem("refreshToken", data.refresh);
+      localStorage.setItem("username", data.user);
+
+      console.log("Signup successful:", data);
+      navigate("/"); // Redirect to the homepage
+        
       } else {
         const data = await response.json();
         setError(data.detail || "Signup failed. Please try again.");
